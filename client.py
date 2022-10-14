@@ -3,10 +3,25 @@
 
 from scapy.all import *
 from cryptography.fernet import Fernet
+import argparse
 
 
-def create_packet(character):
-    pkt = IP(dst="192.168.1.81", id=character)/TCP(flags="S", dport=8505)
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-s",
+                        "--server",
+                        type=str,
+                        help="IP of remote covert channel server",
+                        required=True)
+
+    args = parser.parse_args()
+
+    return args
+
+
+def create_packet(dst_ip, character):
+    pkt = IP(dst=dst_ip, id=character)/TCP(flags="S", dport=8505)
     
     return pkt
 
@@ -22,6 +37,9 @@ def encrypt_data(data):
 
 
 def main():
+    parse_args()
+    args = parse_args()
+
     while True:
         data = input("Enter text: ")
 
@@ -34,11 +52,9 @@ def main():
         decoded_data = data.decode("utf-8")
 
         ascii_data = [ord(c) for c in decoded_data]
-        # print(decoded_data)
-        # print(type(decoded_data))
 
         for char in ascii_data:
-            covert_pkt = create_packet(char)
+            covert_pkt = create_packet(args.server, char)
             send(covert_pkt, verbose=False)
 
     sys.exit()
